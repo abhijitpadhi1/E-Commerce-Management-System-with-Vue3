@@ -1,0 +1,170 @@
+/* =========================================
+   Ecom — Midnight Slate + Electric Blue
+   ========================================= */
+
+:root {
+    --app-bg: #eef2f7;
+    --surface: #f8fafc;
+    --surface-strong: #ffffff;
+
+    --text-primary: #172033;
+    --text-secondary: #64748b;
+
+    --brand: #4f7dff;
+    --brand-hover: #345de7;
+    --brand-soft: #e8eeff;
+
+    --border: #d9e1ec;
+    --success: #16845b;
+    --warning: #b7791f;
+    --danger: #c2414b;
+
+    --radius-lg: 18px;
+    --radius-md: 12px;
+
+    --shadow-sm: 0 2px 8px rgba(23, 32, 51, 0.05);
+    --shadow-md: 0 12px 28px rgba(23, 32, 51, 0.09);
+}
+
+/* App background */
+html,
+body,
+#app {
+    min-height: 100%;
+}
+
+body {
+    background:
+        radial-gradient(circle at 8% 5%,
+            rgba(199, 211, 255, 0.32),
+            transparent 28rem),
+        radial-gradient(circle at 92% 20%,
+            rgba(218, 210, 255, 0.24),
+            transparent 30rem),
+        var(--app-bg);
+
+    color: var(--text-primary);
+}
+
+/* Typography */
+body {
+    font-family: Inter, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+    color: var(--text-primary);
+    letter-spacing: -0.025em;
+}
+
+.text-muted,
+.text-secondary {
+    color: var(--text-secondary) !important;
+}
+
+/* Shared surfaces */
+.card,
+.panel,
+.summary-card {
+    background: rgba(248, 250, 252, 0.94);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-sm);
+}
+
+/* Buttons */
+.btn {
+    border-radius: 10px;
+    font-weight: 600;
+    transition:
+        transform 0.18s ease,
+        box-shadow 0.18s ease,
+        background-color 0.18s ease;
+}
+
+.btn-primary {
+    --bs-btn-bg: var(--brand);
+    --bs-btn-border-color: var(--brand);
+    --bs-btn-hover-bg: var(--brand-hover);
+    --bs-btn-hover-border-color: var(--brand-hover);
+    --bs-btn-active-bg: var(--brand-hover);
+    --bs-btn-active-border-color: var(--brand-hover);
+}
+
+.btn-primary:hover:not(:disabled) {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 14px rgba(79, 125, 255, 0.22);
+}
+
+/* Inputs */
+.form-control,
+.form-select {
+    border-color: var(--border);
+    border-radius: 10px;
+    background-color: var(--surface-strong);
+}
+
+.form-control:focus,
+.form-select:focus {
+    border-color: var(--brand);
+    box-shadow: 0 0 0 0.2rem rgba(79, 125, 255, 0.14);
+}
+
+/* Shared page layout */
+.page-container {
+    width: min(100% - 2rem, 1440px);
+    margin-inline: auto;
+    padding-block: 2rem 4rem;
+}
+
+.page-heading {
+    margin-bottom: 1.5rem;
+}
+
+.page-eyebrow {
+    color: var(--brand);
+    font-size: 0.78rem;
+    font-weight: 700;
+    letter-spacing: 0.09em;
+    text-transform: uppercase;
+}
+
+.page-description {
+    color: var(--text-secondary);
+    max-width: 650px;
+}
+
+/* Navbar */
+.app-navbar {
+    background: rgba(248, 250, 252, 0.92);
+    border-bottom: 1px solid var(--border);
+    backdrop-filter: blur(16px);
+}
+
+.app-navbar .navbar-brand {
+    color: var(--brand) !important;
+}
+
+.app-navbar .nav-link {
+    color: var(--text-secondary);
+    font-weight: 500;
+    border-radius: 8px;
+}
+
+.app-navbar .nav-link:hover,
+.app-navbar .nav-link.router-link-active {
+    color: var(--brand);
+    background: var(--brand-soft);
+}
+
+/* Responsive spacing */
+@media (max-width: 576px) {
+    .page-container {
+        width: min(100% - 1.25rem, 1440px);
+        padding-block: 1.25rem 2.5rem;
+    }
+}
