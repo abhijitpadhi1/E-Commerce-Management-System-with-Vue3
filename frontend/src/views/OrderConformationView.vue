@@ -60,6 +60,15 @@ function formatOrderDate(dateString) {
     }).format(new Date(dateString));
 }
 
+function formatPrice(value) {
+    return new Intl.NumberFormat('en-IN', {
+        style: 'currency',
+        currency: 'INR',
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+    }).format(Number(value ?? 0));
+}
+
 async function payNow(outcome = 'success') {
     if (!order.value || paying.value) return;
     paying.value = true;
@@ -192,9 +201,31 @@ onMounted(loadOrder);
                         </div>
                     </div>
 
-                    <div class="total-row">
-                        <span>Total paid / payable</span>
-                        <strong>₹{{ Number(order.total_amount).toFixed(2) }}</strong>
+                    <div class="order-price-breakdown">
+                        <div class="price-breakdown-row">
+                            <span>Subtotal</span>
+                            <strong>{{ formatPrice(order.subtotal ?? order.total_amount) }}</strong>
+                        </div>
+
+                        <div class="price-breakdown-row">
+                            <span>
+                                Discount
+                                <span v-if="order.offer_code" class="offer-code">({{ order.offer_code }})</span>
+                            </span>
+
+                            <strong class="discount-amount">
+                                −{{ formatPrice(order.discount_amount ?? 0) }}
+                            </strong>
+                        </div>
+
+                        <div class="price-breakdown-divider"></div>
+
+                        <div class="total-row">
+                            <span>
+                                {{ order.payment_status === 'PAID' ? 'Total paid' : 'Total payable' }}
+                            </span>
+                            <strong>{{ formatPrice(order.total_amount) }}</strong>
+                        </div>
                     </div>
                 </section>
 
@@ -462,6 +493,46 @@ onMounted(loadOrder);
 .item-price {
     flex-shrink: 0;
     font-size: 0.95rem;
+}
+
+.order-price-breakdown {
+    margin-top: 1.25rem;
+    padding: 1.25rem;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    background: var(--surface-muted, rgba(128, 128, 128, 0.05));
+}
+
+.price-breakdown-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 0.45rem 0;
+    color: var(--text-secondary);
+    font-size: 0.92rem;
+}
+
+.price-breakdown-row strong {
+    color: var(--text-primary);
+    font-weight: 600;
+}
+
+.offer-code {
+    margin-left: 0.25rem;
+    color: var(--brand);
+    font-size: 0.82rem;
+    font-weight: 700;
+}
+
+.discount-amount {
+    color: var(--success, #198754) !important;
+}
+
+.price-breakdown-divider {
+    height: 1px;
+    margin: 0.75rem 0;
+    background: var(--border);
 }
 
 .total-row {

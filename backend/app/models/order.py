@@ -8,6 +8,9 @@ class Order(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
+    offer_code = db.Column(db.String(50), nullable=True)
+    discount_amount = db.Column(db.Numeric(10, 2), nullable=False, default=0.00)
+    subtotal = db.Column(db.Numeric(10, 2), nullable=False, default=0.00)
     total_amount = db.Column(db.Numeric(10, 2), nullable=False)
     status = db.Column(db.String(50), nullable=False, default="PENDING")
     payment_status = db.Column(db.String(50), nullable=False, default="UNPAID")

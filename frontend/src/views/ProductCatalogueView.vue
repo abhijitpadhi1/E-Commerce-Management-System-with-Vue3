@@ -67,12 +67,10 @@ const filteredProducts = computed(() => {
 
 async function handleAddToCart(product) {
     const token = localStorage.getItem('access_token');
-
     if (!token) {
         notify('Please log in to add products to your cart.', 'warning');
         return;
     }
-
     if (!product.is_active || product.stock <= 0) {
         notify('This product is currently unavailable.', 'info');
         return;

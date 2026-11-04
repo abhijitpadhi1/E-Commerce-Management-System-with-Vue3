@@ -3,9 +3,10 @@ from flask import Blueprint, jsonify, request, Response
 from flask import current_app
 from flask_jwt_extended import get_jwt_identity
 
-from app.extensions import db
+from app.extensions import db, cache
 from app.models import Order, OrderItem, Product, Payment
 from app.utils.decorators import role_required
+from app.services.product_cache import invalidate_product_caches
 
 payments_bp = Blueprint("payments", __name__, url_prefix="/payments")
 
@@ -57,6 +58,7 @@ def mock_payment(order_id: int) -> Response:
         return jsonify({"message": "This order has already been paid."}, 409)
     if order.status != "PENDING_PAYMENT":
         return jsonify({"message": "This order is not awaiting payment."}, 409)
+    product_ids = {item.product_id for item in order.items}
 
     payment_status: str = "SUCCESS" if outcome == "success" else "FAILED"
     payment: Payment = Payment(
@@ -79,6 +81,8 @@ def mock_payment(order_id: int) -> Response:
                 order.status = "PROCESSING"
 
                 db.session.commit()
+                # Invalidate product caches
+                invalidate_product_caches(product_ids)
 
             except ValueError as error:
                 db.session.rollback()

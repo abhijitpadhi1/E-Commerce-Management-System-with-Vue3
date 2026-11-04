@@ -1,6 +1,7 @@
 <script setup>
-import { onMounted, ref } from 'vue';
+import { onMounted, onBeforeUnmount, ref } from 'vue';
 import { getMyOrders, confirmOrderDelivery } from '@/services/orderService';
+import { requestOrderHistoryExport, getOrderHistoryExportStatus } from '@/services/exportService';
 import { useNotification } from '@/composables/useNotifications';
 
 const { notify } = useNotification();
@@ -9,6 +10,12 @@ const orders = ref([]);
 const loading = ref(true);
 const updatingOrderId = ref(null);
 
+const exportFormat = ref('csv');
+const exporting = ref(false);
+const exportStatus = ref('');
+
+let exportPollingTimer = null;
+
 onMounted(async () => {
     try {
         orders.value = await getMyOrders();
@@ -16,6 +23,12 @@ onMounted(async () => {
         notify(error.response?.data?.message || 'Unable to load your orders.', 'danger');
     } finally {
         loading.value = false;
+    }
+});
+
+onBeforeUnmount(() => {
+    if (exportPollingTimer) {
+        clearTimeout(exportPollingTimer);
     }
 });
 
@@ -60,10 +73,58 @@ async function confirmDelivery(orderId) {
         updatingOrderId.value = null;
     }
 }
+
+
+async function requestExport() {
+    if (exporting.value) return;
+
+    exporting.value = true;
+    exportStatus.value = 'Your export is being queued...';
+
+    try {
+        const result = await requestOrderHistoryExport(exportFormat.value);
+
+        exportStatus.value = 'Export queued. Preparing your file...';
+        notify('Your order history export has been queued.', 'info');
+
+        pollExportStatus(result.task_id);
+    } catch (error) {
+        exporting.value = false;
+        exportStatus.value = '';
+        notify(error.response?.data?.error || 'Unable to request your export.', 'danger');
+    }
+}
+
+function pollExportStatus(taskId) {
+    exportPollingTimer = setTimeout(async () => {
+        try {
+            const result = await getOrderHistoryExportStatus(taskId);
+            if (result.status === 'SUCCESS') {
+                exporting.value = false;
+                exportStatus.value = 'Your export has been emailed successfully.';
+                notify('Your order history export has been sent to your email.', 'success');
+                return;
+            }
+            if (result.status === 'FAILURE') {
+                exporting.value = false;
+                exportStatus.value = 'Export failed. Please try again.';
+                notify('Export generation failed. Please try again.', 'danger');
+                return;
+            }
+            exportStatus.value = 'Preparing your export...';
+            pollExportStatus(taskId);
+        } catch (error) {
+            exporting.value = false;
+            exportStatus.value = '';
+            notify('Unable to check export status.', 'danger');
+        }
+    }, 2000);
+}
 </script>
 
 <template>
     <main class="my-orders-page container py-5">
+        <!-- Header -->
         <header class="page-header">
             <div>
                 <p class="eyebrow">Your account</p>
@@ -77,6 +138,37 @@ async function confirmDelivery(orderId) {
                 Continue Shopping
             </RouterLink>
         </header>
+
+        <!-- Exporting -->
+        <section class="export-card mb-4">
+            <div class="export-card-content">
+                <div>
+                    <h2 class="export-title">Export Order History</h2>
+                    <p class="export-description">
+                        Receive a copy of your order history by email.
+                    </p>
+                </div>
+
+                <div class="export-controls">
+                    <label for="export-format" class="form-label mb-0">File format</label>
+                    <select id="export-format" v-model="exportFormat" class="form-select" :disabled="exporting">
+                        <option value="csv">CSV (.csv)</option>
+                        <option value="xlsx">Excel (.xlsx)</option>
+                    </select>
+
+                    <button 
+                        class="btn btn-primary" 
+                        :disabled="exporting || orders.length === 0" 
+                        @click="requestExport"
+                    >
+                        <span v-if="exporting" class="spinner-border spinner-border-sm me-2" role="status"></span>
+                        {{ exporting ? 'Preparing...' : 'Email My Export' }}
+                    </button>
+                </div>
+            </div>
+
+            <p v-if="exportStatus" class="export-status mb-0" role="status">{{ exportStatus }}</p>
+        </section>
 
         <!-- Loading -->
         <section v-if="loading" class="state-card">
@@ -104,11 +196,7 @@ async function confirmDelivery(orderId) {
                 <span>Most recent orders first</span>
             </div>
 
-            <article
-                v-for="order in orders"
-                :key="order.id"
-                class="order-card"
-            >
+            <article v-for="order in orders" :key="order.id" class="order-card">
                 <div class="order-card-header">
                     <div class="order-heading">
                         <span class="order-number">Order #{{ order.id }}</span>
@@ -233,6 +321,49 @@ async function confirmDelivery(orderId) {
     justify-content: space-between;
     gap: 1rem;
     margin-bottom: 1rem;
+    color: var(--text-secondary);
+    font-size: 0.85rem;
+}
+
+.export-card {
+    padding: 1.25rem 1.35rem;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    background: var(--surface, rgba(255, 255, 255, 0.72));
+    box-shadow: var(--shadow-sm);
+}
+
+.export-card-content {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1.5rem;
+}
+
+.export-title {
+    margin-bottom: 0.35rem;
+    font-size: 1.05rem;
+    font-weight: 750;
+}
+
+.export-description {
+    margin: 0;
+    color: var(--text-secondary);
+    font-size: 0.85rem;
+}
+
+.export-controls {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.export-controls .form-select {
+    min-width: 140px;
+}
+
+.export-status {
+    margin-top: 0.9rem;
     color: var(--text-secondary);
     font-size: 0.85rem;
 }
@@ -397,6 +528,22 @@ async function confirmDelivery(orderId) {
 .empty-state h2 {
     font-size: 1.35rem;
     font-weight: 700;
+}
+
+@media (max-width: 650px) {
+    .export-card-content {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    .export-controls {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    .export-controls .form-select {
+        width: 100%;
+    }
 }
 
 @media (max-width: 650px) {

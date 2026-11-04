@@ -15,7 +15,7 @@ coverage
 *.local
 
 # Editor directories and files
-.vscode/*
+.vscode
 .idea
 *.suo
 *.ntvs*

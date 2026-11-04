@@ -1,95 +1,175 @@
 # E-Commerce Management System
 
-A full-stack mini e-commerce application built to explore how frontend and backend systems work together to support product management, shopping carts, orders, payments, and inventory.
+A full-stack e-commerce application built to explore how frontend and backend systems work together to support product management, shopping carts, orders, payments, inventory, and background processing.
 
-The application includes separate experiences for **customers** and **administrators**. Customers can browse products, manage their cart, place orders, simulate payments, and confirm delivery. Administrators can manage products, monitor inventory, and process orders.
+The application provides separate experiences for **customers** and **administrators**. Customers can browse products, manage their cart, apply offers, place orders, simulate payments, track orders, and confirm delivery. Administrators can manage products and inventory, process orders, and review dashboard metrics.
+
+## Features
+
+### Customer
+- Customer registration and login with JWT authentication
+- Browse active products and view product details
+- Add, update, and remove cart items
+- Checkout with a shipping address and automatically apply the best eligible offer
+- Place orders with saved item and price snapshots
+- Simulate successful or failed payments
+- View order history and confirm delivery of shipped orders
+- Request asynchronous order-history exports in CSV or XLSX format and receive them by email
+- Receive daily email reminders based on cart contents or general offers
+
+### Administrator
+- Role-protected admin access
+- Create, update, and soft-delete products
+- Manage inventory and stock quantities
+- View and process orders; mark eligible paid orders as shipped
+- View dashboard metrics for products, inventory, orders, and paid sales
+- Generate monthly activity reports covering sales, orders, customers, fulfilment, and product/category performance
+- Receive monthly report notifications
 
 ## Tech Stack
 
 ### Frontend
-- Vue 3
-- JavaScript
-- Vite
-- Vue Router
-- Pinia
-- Axios
-- Bootstrap
-- HTML5 and CSS3
+- Vue 3, JavaScript, Vite
+- Vue Router, Pinia, Axios
+- Bootstrap, HTML5, CSS3
 
 ### Backend
-- Python
-- Flask
-- Flask-SQLAlchemy
-- SQLite
-- Flask-JWT-Extended
-- Flask-CORS
+- Python, Flask, Flask-SQLAlchemy, SQLite
+- Flask-JWT-Extended, Flask-CORS
 - `pwdlib` with Argon2 password hashing
-- `uv` for Python dependency management
+- `uv` for Python dependency and environment management
+- Flask-Caching with Redis
+- Celery and Celery Beat
+- Flask-Mail with Gmail SMTP
+- ReportLab and Jinja templates for PDF/HTML reports
 
 ### Development and Testing
 - Git and GitHub
-- ESLint
-- Prettier
-- Vitest
-- Pytest
-- Environment variables using `.env`
+- ESLint, Prettier, Vitest, Pytest
+- Environment variables configured through `.env`
 
-## Application Features
+## Background Processing and Caching
 
-### Customer
-- Customer registration and login
-- Browse and view product details
-- Add, update, and remove cart items
-- Checkout with a shipping address
-- Place orders
-- Simulate payment using a mock payment system
-- View order history
-- Confirm receipt of shipped orders
+- Generate customer order exports asynchronously in CSV or XLSX and email the resulting attachment.
+- Generate monthly admin activity reports and send summary notifications.
+- Send daily customer email reminders through Celery Beat.
+- Cache the public active-product catalogue and product-detail responses in Redis.
+- Invalidate product caches after admin product changes and successful payment stock deductions.
+- Keep customer-specific data such as carts and orders out of the shared product cache.
 
-### Administrator
-- Admin login
-- Create and manage products
-- Soft-delete products from the catalogue
-- Manage inventory and stock quantities
-- View order details
-- Mark paid orders as shipped
-- View dashboard metrics for products, inventory, and orders
+## Architecture
 
-## What We Learned
+```text
+E-Commerce-Management-System/
+├── frontend/            # Vue 3 single-page application
+├── backend/             # Flask REST API, database, and Celery tasks
+├── README.md
+├── README-frontend.md
+└── README-backend.md
+```
 
-Developing this application helped us understand how to design and build a full-stack system from the ground up.
+The frontend communicates with the Flask backend through REST APIs. The backend owns business logic, validation, authentication, authorization, persistence, background jobs, email delivery, and cache management.
 
-- How frontend and backend applications communicate through REST APIs
-- How to organize a project into separate frontend and backend layers
-- How to design relational database tables and relationships
-- How authentication and role-based authorization work
-- How to manage application state using Pinia
-- How to handle asynchronous API requests and application errors
-- How to implement CRUD operations
-- How to manage cart, checkout, order, and payment workflows
-- How to maintain inventory consistency and prevent overselling
-- How to preserve order-item snapshots for historical accuracy
-- How to use environment variables and protect sensitive configuration
-- How to build reusable components and maintain consistent UI styling
-- How to validate inputs and test application workflows
+## Running the Application Locally
+
+### Prerequisites
+- Node.js and npm
+- Python version compatible with backend dependencies
+- `uv`
+- Redis
+
+### 1. Configure the backend
+
+```bash
+cd backend
+uv sync
+```
+
+Create/configure `backend/.env` using the project's configuration. Set the Flask/JWT and database values, Redis cache URL, Celery broker/result-backend URLs, and email/SMTP settings as required. **Do not commit `.env` or credentials.**
+
+### 2. Start Redis
+
+On Ubuntu:
+
+```bash
+sudo systemctl start redis-server
+redis-cli ping
+```
+
+Expected response: `PONG`.
+
+### 3. Start the Flask API
+
+In a terminal:
+
+```bash
+cd backend
+uv run main.py
+```
+
+The backend runs locally on port **5001**.
+
+### 4. Start the Celery worker
+
+In a second terminal:
+
+```bash
+cd backend
+uv run celery -A celery_app:celery worker --loglevel=INFO
+```
+
+The worker executes queued tasks such as order exports and report generation.
+
+### 5. Start Celery Beat
+
+In a third terminal:
+
+```bash
+cd backend
+uv run celery -A celery_app:celery beat --loglevel=INFO
+```
+
+Beat publishes scheduled tasks, including daily reminders and the monthly admin report. Keep both worker and Beat running for background and scheduled jobs.
+
+### 6. Start the frontend
+
+In another terminal:
+
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+Vite prints the local URL, usually `http://localhost:5173`. Ensure the frontend API configuration points to the Flask API on port `5001`.
+
+### Local services overview
+
+| Service | Purpose | Command |
+|---|---|---|
+| Redis | Cache and Celery broker/backend | `sudo systemctl start redis-server` |
+| Flask | REST API | `cd backend && uv run main.py` |
+| Celery worker | Executes background tasks | `cd backend && uv run celery -A celery_app:celery worker --loglevel=INFO` |
+| Celery Beat | Schedules recurring tasks | `cd backend && uv run celery -A celery_app:celery beat --loglevel=INFO` |
+| Vite | Frontend dev server | `cd frontend && npm run dev` |
+
+Run each command in its own terminal. Configure `.env` before starting services.
 
 ## Project Learning Approach
 
-The application was developed in stages:
-
-1. Project setup
-2. Database design
-3. Authentication
-4. Product management
-5. Product catalogue
-6. Shopping cart
-7. Checkout and order creation
-8. Mock payment
-9. Order management
-10. Inventory management
-11. Admin dashboard
-12. UI refinement and testing
+1. Project setup and architecture
+2. Database design and models
+3. Authentication and role-based authorization
+4. Product management and catalogue
+5. Shopping cart and checkout
+6. Offers and order totals
+7. Mock payments and inventory consistency
+8. Order fulfilment and admin dashboard
+9. Asynchronous exports and email delivery
+10. Scheduled reports and customer reminders
+11. Redis caching and cache invalidation
+12. End-to-end testing and refinement
 
 ## Purpose
 
-This project was developed as a practical learning experience to understand the architecture, implementation, and integration of a full-stack web application. It focuses on learning core development concepts through a realistic business workflow.
+This project is a practical learning experience in full-stack development and application integration. It explores API design, relational data, authentication, asynchronous processing, scheduled tasks, caching, and a realistic business workflow.

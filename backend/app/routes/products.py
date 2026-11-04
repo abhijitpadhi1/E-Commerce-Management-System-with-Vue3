@@ -2,9 +2,14 @@ from decimal import Decimal, InvalidOperation
 from flask import Blueprint, jsonify, request, Response
 from sqlalchemy.exc import IntegrityError
 
-from app.extensions import db
+from app.extensions import db, cache
 from app.models import Product
 from app.utils.decorators import role_required
+from app.services.product_cache import (
+    PRODUCT_LIST_CACHE_KEY,
+    get_product_detail_cache_key,
+    invalidate_product_caches,
+)
 
 product_bp: Blueprint = Blueprint("products", __name__, url_prefix="/products")
 
@@ -128,6 +133,7 @@ def create_product() -> tuple[Response, int]:
 
         db.session.add(product)
         db.session.commit()
+        invalidate_product_caches([product.id])
 
     except (InvalidOperation, ValueError, TypeError):
         db.session.rollback()
@@ -156,30 +162,57 @@ def create_product() -> tuple[Response, int]:
 
 @product_bp.get("/")
 def get_products() -> tuple[Response, int]:
-    # Public catalogue: only active products are visible.
+    try:
+        cached_response = cache.get(PRODUCT_LIST_CACHE_KEY)
+        if cached_response is not None:
+            return jsonify(cached_response), 200
+
+    except Exception:
+        current_app.logger.exception(
+            "Product catalogue cache read failed. Fetching from database."
+        )
+
     products = (
         Product.query.filter_by(is_active=True)
         .order_by(Product.created_at.desc())
         .all()
     )
-    return (
-        jsonify(
-            {
-                "status": "success",
-                "count": len(products),
-                "products": [serialize_product(product) for product in products],
-            }
-        ),
-        200,
-    )
+    response_data = {
+        "status": "success",
+        "count": len(products),
+        "products": [serialize_product(product) for product in products],
+    }
+
+    try:
+        cache.set(PRODUCT_LIST_CACHE_KEY, response_data, timeout=300)
+    except Exception:
+        current_app.logger.exception("Product catalogue cache write failed.")
+
+    return jsonify(response_data), 200
 
 
 @product_bp.get("/<int:product_id>")
 def get_product(product_id: int) -> tuple[Response, int]:
-    product: Product | None = Product.query.filter_by(
-        id=product_id, is_active=True
+    cache_key = get_product_detail_cache_key(product_id)
+
+    # 1. Try to retrieve the product from Redis
+    try:
+        cached_response = cache.get(cache_key)
+        if cached_response is not None:
+            return jsonify(cached_response), 200
+
+    except Exception:
+        current_app.logger.exception(
+            "Product detail cache read failed. Fetching from database."
+        )
+
+    # 2. Cache miss: retrieve the product from the database
+    product = Product.query.filter_by(
+        id=product_id,
+        is_active=True,
     ).first()
-    if not product:
+
+    if product is None:
         return (
             jsonify(
                 {
@@ -190,15 +223,23 @@ def get_product(product_id: int) -> tuple[Response, int]:
             404,
         )
 
-    return (
-        jsonify(
-            {
-                "status": "success",
-                "product": serialize_product(product),
-            }
-        ),
-        200,
-    )
+    # 3. Serialize the product
+    response_data = {
+        "status": "success",
+        "product": serialize_product(product),
+    }
+
+    # 4. Store the response in Redis
+    try:
+        cache.set(
+            cache_key,
+            response_data,
+            timeout=300,
+        )
+    except Exception:
+        current_app.logger.exception("Product detail cache write failed.")
+
+    return jsonify(response_data), 200
 
 
 @product_bp.patch("/<int:product_id>")
@@ -261,6 +302,7 @@ def update_product(product_id: int) -> tuple[Response, int]:
             product.image_url = data["image_url"]
 
         db.session.commit()
+        invalidate_product_caches([product.id])
 
     except (InvalidOperation, ValueError, TypeError):
         db.session.rollback()
@@ -303,6 +345,7 @@ def delete_product(product_id: int) -> tuple[Response, int]:
 
     product.is_active = False
     db.session.commit()
+    invalidate_product_caches([product.id])
 
     return (
         jsonify(

@@ -1,4 +1,5 @@
 from decimal import Decimal
+from datetime import datetime, timezone
 from flask import Blueprint, jsonify, request, Response
 from flask_jwt_extended import get_jwt_identity
 
@@ -7,6 +8,10 @@ from app.models import Cart, CartItem, Product, User
 from app.utils.decorators import role_required
 
 cart_bp: Blueprint = Blueprint("cart", __name__, url_prefix="/cart")
+
+
+def touch_cart(cart: Cart) -> None:
+    cart.updated_at = datetime.now(timezone.utc)
 
 
 def serialize_cart_item(cart_item: CartItem) -> dict:
@@ -181,11 +186,8 @@ def add_cart_item() -> tuple[Response, int]:
     if cart_item:
         cart_item.quantity = new_quantity
     else:
-        cart_item = CartItem(
-            cart_id=cart.id,
-            product_id=product.id,
-            quantity=quantity,
-        )
+        cart_item = CartItem(cart_id=cart.id, product_id=product.id, quantity=quantity)
+        touch_cart(cart)
         db.session.add(cart_item)
 
     db.session.commit()
@@ -296,6 +298,7 @@ def update_cart_item(item_id: int) -> tuple[Response, int]:
         )
 
     cart_item.quantity = quantity
+    touch_cart(cart)
     db.session.commit()
     return (
         jsonify(
@@ -340,8 +343,8 @@ def remove_cart_item(item_id: int) -> tuple[Response, int]:
         )
 
     db.session.delete(cart_item)
+    touch_cart(cart)
     db.session.commit()
-
     return (
         jsonify(
             {
@@ -371,9 +374,8 @@ def clear_cart() -> tuple[Response, int]:
 
     for item in cart.items:
         db.session.delete(item)
-
+    touch_cart(cart)
     db.session.commit()
-
     return (
         jsonify(
             {

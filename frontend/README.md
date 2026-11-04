@@ -1,126 +1,114 @@
 # E-Commerce Management System — Frontend
 
-The frontend is built using **Vue 3 and JavaScript**. It provides the customer-facing shopping experience and the administrator interface for managing products, inventory, and orders.
-
-The frontend communicates with the Flask backend through REST APIs.
+The frontend is built with **Vue 3 and JavaScript**. It provides the customer shopping experience and administrator interface for product, inventory, and order management. It communicates with the Flask backend through REST APIs.
 
 ## Tech Stack
 
-- Vue 3
-- JavaScript
+- Vue 3 and JavaScript
 - Vite
 - Vue Router
 - Pinia
 - Axios
 - Bootstrap
-- HTML5
-- CSS3
-- ESLint
-- Prettier
-- Vitest
+- HTML5 and CSS3
+- ESLint, Prettier, and Vitest
 
 ## Frontend Features
 
 ### Customer Interface
-- Home page
+- Home page and product catalogue
 - Customer signup and login
-- Product catalogue
-- Product details
-- Shopping cart
-- Checkout
-- Order confirmation
+- Product detail pages
+- Shopping cart and quantity management
+- Checkout and order confirmation
+- Offer/discount summary
 - Mock payment interaction
-- Order history
-- Delivery confirmation
+- Order history and delivery confirmation
+- Request order-history export in CSV or XLSX and view export status
 
 ### Administrator Interface
 - Admin dashboard
-- Product management
+- Product creation, editing, and soft deletion
 - Inventory management
-- Order management
-- Order status updates
+- Order management and fulfilment status updates
 
-### UI and User Experience
-- Responsive layouts
-- Reusable Vue components
-- Loading states
-- Empty states
-- Error handling
-- Notifications
-- Form validation
-- Search and filtering
-- Consistent application theme
+### User Experience
+- Responsive layouts and reusable Vue components
+- Loading, empty, success, and error states
+- Notifications and form validation
+- Product search and filtering
+- Consistent styling and theme
 
-## Vue Application Concepts Used
+## Vue Application Concepts
 
 ### Vue 3
-- Composition API
-- `<script setup>`
-- Reactive state using `ref` and `reactive`
-- Computed properties
-- Lifecycle hooks
-- Component-based architecture
-- Props and component events
+- Composition API and `<script setup>`
+- Reactive state with `ref` and `reactive`
+- Computed properties and lifecycle hooks
+- Component-based architecture, props, and events
 
 ### Vue Router
-- Route configuration
-- Navigation between views
-- Protected routes
-- Role-based navigation
+- Route configuration and navigation
+- Protected routes and role-based navigation
 - Authentication-aware route guards
 
 ### Pinia
-- Authentication state
-- Current-user state
-- Cart state
-- Shared state across components
+- Authentication and current-user state
+- Cart state and shared state
 - Store actions and computed values
 
 ### Axios
-- Centralized API configuration
-- REST API requests
-- JWT token attachment through request interceptors
-- Handling API responses and errors
+- Centralized API configuration and REST requests
+- JWT attachment through request interceptors
+- Response and error handling
 
 ### Bootstrap and CSS
-- Responsive layouts
-- Bootstrap utility classes and components
+- Responsive layouts and utility classes
 - Scoped component styles
 - CSS variables for theme consistency
 - Responsive product cards, forms, and dashboards
 
-## What We Learned
-
-Through frontend development, we learned:
-
-- How to structure a Vue application
-- How to build reusable components
-- How to manage reactive state
-- How to use the Composition API
-- How to configure and use Vue Router
-- How to protect routes based on authentication and user roles
-- How to manage shared state with Pinia
-- How to communicate with a backend using Axios
-- How to attach JWT tokens to protected requests
-- How to handle loading, success, and error states
-- How to build forms and validate user input
-- How to implement product search and filtering
-- How to create responsive interfaces using Bootstrap and CSS
-- How to maintain consistent styling through CSS variables
-- How to build customer and administrator interfaces within one application
-- How to integrate frontend workflows with backend business logic
-
 ## Running the Frontend
 
-From the `frontend/` directory, install dependencies and start the development server:
+### Prerequisites
+- Node.js and npm
+- Flask backend running locally on port **5001**
+
+### Install dependencies
+
+From the repository root:
 
 ```bash
+cd frontend
 npm install
+```
+
+### Start the Vite development server
+
+```bash
 npm run dev
 ```
 
-The frontend runs locally using Vite. The backend API is configured to run on port `5001`.
+Vite prints the local URL in the terminal, usually:
+
+```text
+http://localhost:5173
+```
+
+Keep the backend running while using the frontend. Ensure the frontend API configuration points to the Flask API on port `5001`.
+
+## Frontend Learning Outcomes
+
+- Vue application structure and reusable components
+- Reactive state and Composition API
+- Route guards and role-based navigation
+- Shared state with Pinia
+- API integration using Axios and JWTs
+- Loading, success, and error states
+- Form validation and user input handling
+- Search, filtering, and responsive design
+- Integration of customer/admin interfaces with backend workflows
 
 ## Purpose
 
-The frontend was developed to understand how a modern single-page application is structured, how state is managed, and how user interactions are connected to backend services.
+The frontend demonstrates how a modern single-page application organizes views and state, handles user interactions, and integrates with backend services to support a complete e-commerce workflow.

@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Monthly Admin Activity Report</title>
+</head>
+
+<body style="margin:0; padding:0; background-color:#f3f6fa;
+             font-family:Arial, Helvetica, sans-serif; color:#243247;">
+
+    <table role="presentation" width="100%" cellspacing="0" cellpadding="0"
+        style="background-color:#f3f6fa; padding:24px 0;">
+        <tr>
+            <td align="center">
+
+                <table role="presentation" width="700" cellspacing="0" cellpadding="0" style="width:100%; max-width:700px; background-color:#ffffff;
+              border:1px solid #e0e6ed;">
+
+                    <!-- Header -->
+                    <tr>
+                        <td style="background-color:#183153; padding:28px 24px;
+                   text-align:center; color:#ffffff;">
+                            <h1 style="margin:0; font-size:24px;">
+                                Monthly Admin Activity Report
+                            </h1>
+                            <p style="margin:10px 0 0; font-size:14px; color:#dce6f2;">
+                                {{ report_period }}
+                            </p>
+                        </td>
+                    </tr>
+
+                    <!-- Executive Summary -->
+                    <tr>
+                        <td style="padding:24px;">
+                            <h2 style="margin:0 0 16px; font-size:18px; color:#183153;">
+                                Executive Summary
+                            </h2>
+
+                            <table role="presentation" width="100%" cellspacing="0" cellpadding="0">
+                                <tr>
+                                    <td width="50%" style="padding:8px;">
+                                        <div style="background:#eef3f8; padding:16px;">
+                                            <div style="font-size:12px; color:#5b6573;">Paid Sales</div>
+                                            <div style="font-size:22px; font-weight:bold; color:#183153;">
+                                                {{ paid_sales }}
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td width="50%" style="padding:8px;">
+                                        <div style="background:#eef3f8; padding:16px;">
+                                            <div style="font-size:12px; color:#5b6573;">Orders Created</div>
+                                            <div style="font-size:22px; font-weight:bold; color:#183153;">
+                                                {{ total_orders_created }}
+                                            </div>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td width="50%" style="padding:8px;">
+                                        <div style="background:#eef3f8; padding:16px;">
+                                            <div style="font-size:12px; color:#5b6573;">Buying Customers</div>
+                                            <div style="font-size:22px; font-weight:bold; color:#183153;">
+                                                {{ unique_buying_customers }}
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td width="50%" style="padding:8px;">
+                                        <div style="background:#eef3f8; padding:16px;">
+                                            <div style="font-size:12px; color:#5b6573;">Successful Payments</div>
+                                            <div style="font-size:22px; font-weight:bold; color:#183153;">
+                                                {{ successful_payments }}
+                                            </div>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+
+                    <!-- Order Status -->
+                    <tr>
+                        <td style="padding:0 24px 24px;">
+                            <h2 style="font-size:18px; color:#183153;">Order Status Summary</h2>
+
+                            <table width="100%" cellspacing="0" cellpadding="0"
+                                style="border-collapse:collapse; font-size:14px;">
+                                <tr style="background:#e3eaf2;">
+                                    <th align="left" style="padding:10px;">Order Status</th>
+                                    <th align="right" style="padding:10px;">Number of Orders</th>
+                                </tr>
+
+                                {% for status, count in order_status_summary.items() %}
+                                <tr>
+                                    <td style="padding:10px; border:1px solid #d4dce5;">
+                                        {{ status.replace("_", " ").title() }}
+                                    </td>
+                                    <td align="right" style="padding:10px; border:1px solid #d4dce5;">
+                                        {{ count }}
+                                    </td>
+                                </tr>
+                                {% else %}
+                                <tr>
+                                    <td style="padding:10px;">No orders recorded</td>
+                                    <td align="right" style="padding:10px;">0</td>
+                                </tr>
+                                {% endfor %}
+                            </table>
+                        </td>
+                    </tr>
+
+                    <!-- Fulfillment -->
+                    <tr>
+                        <td style="padding:0 24px 24px;">
+                            <h2 style="font-size:18px; color:#183153;">Fulfillment Activity</h2>
+
+                            <table width="100%" cellspacing="0" cellpadding="0"
+                                style="border-collapse:collapse; font-size:14px;">
+                                <tr style="background:#e3eaf2;">
+                                    <th align="left" style="padding:10px;">Activity</th>
+                                    <th align="right" style="padding:10px;">Orders</th>
+                                </tr>
+                                <tr>
+                                    <td style="padding:10px; border:1px solid #d4dce5;">
+                                        Orders shipped during the month
+                                    </td>
+                                    <td align="right" style="padding:10px; border:1px solid #d4dce5;">
+                                        {{ orders_shipped_during_month }}
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td style="padding:10px; border:1px solid #d4dce5;">
+                                        Orders delivered during the month
+                                    </td>
+                                    <td align="right" style="padding:10px; border:1px solid #d4dce5;">
+                                        {{ orders_delivered_during_month }}
+                                    </td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+
+                    <!-- Top Products -->
+                    <tr>
+                        <td style="padding:0 24px 24px;">
+                            <h2 style="font-size:18px; color:#183153;">Top Products by Quantity Sold</h2>
+
+                            <table width="100%" cellspacing="0" cellpadding="0"
+                                style="border-collapse:collapse; font-size:14px;">
+                                <tr style="background:#183153; color:#ffffff;">
+                                    <th align="left" style="padding:10px;">Product</th>
+                                    <th align="right" style="padding:10px;">Quantity Sold</th>
+                                    <th align="right" style="padding:10px;">Revenue</th>
+                                </tr>
+
+                                {% for item in top_products %}
+                                <tr>
+                                    <td style="padding:10px; border:1px solid #d4dce5;">
+                                        {{ item.product_name }}
+                                    </td>
+                                    <td align="right" style="padding:10px; border:1px solid #d4dce5;">
+                                        {{ item.quantity_sold }}
+                                    </td>
+                                    <td align="right" style="padding:10px; border:1px solid #d4dce5;">
+                                        {{ item.revenue }}
+                                    </td>
+                                </tr>
+                                {% else %}
+                                <tr>
+                                    <td colspan="3" style="padding:10px;">No product sales recorded</td>
+                                </tr>
+                                {% endfor %}
+                            </table>
+                        </td>
+                    </tr>
+
+                    <!-- Category Performance -->
+                    <tr>
+                        <td style="padding:0 24px 24px;">
+                            <h2 style="font-size:18px; color:#183153;">Category Performance</h2>
+
+                            <table width="100%" cellspacing="0" cellpadding="0"
+                                style="border-collapse:collapse; font-size:14px;">
+                                <tr style="background:#183153; color:#ffffff;">
+                                    <th align="left" style="padding:10px;">Category</th>
+                                    <th align="right" style="padding:10px;">Quantity Sold</th>
+                                    <th align="right" style="padding:10px;">Revenue</th>
+                                </tr>
+
+                                {% for item in category_performance %}
+                                <tr>
+                                    <td style="padding:10px; border:1px solid #d4dce5;">
+                                        {{ item.category }}
+                                    </td>
+                                    <td align="right" style="padding:10px; border:1px solid #d4dce5;">
+                                        {{ item.quantity_sold }}
+                                    </td>
+                                    <td align="right" style="padding:10px; border:1px solid #d4dce5;">
+                                        {{ item.revenue }}
+                                    </td>
+                                </tr>
+                                {% else %}
+                                <tr>
+                                    <td colspan="3" style="padding:10px;">No category sales recorded</td>
+                                </tr>
+                                {% endfor %}
+                            </table>
+                        </td>
+                    </tr>
+
+                    <!-- Footer -->
+                    <tr>
+                        <td style="padding:20px 24px; background:#f7f9fb;">
+                            <p style="font-size:12px; line-height:1.6; color:#5b6573;">
+                                <strong>Note:</strong> Paid sales represent successful payment
+                                amounts. They are not profit because product costs and operating
+                                expenses are not currently recorded in the system.
+                            </p>
+                            <p style="font-size:11px; color:#8993a1;">
+                                Automatically generated by the E-Commerce Management System.
+                            </p>
+                        </td>
+                    </tr>
+
+                </table>
+            </td>
+        </tr>
+    </table>
+
+</body>
+
+</html>

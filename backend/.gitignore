@@ -12,6 +12,9 @@ wheels/
 # Environment variables
 .env
 
+# Celery logs
+logs/
+
 # SQLITE files
 *.db
 instance/*.db

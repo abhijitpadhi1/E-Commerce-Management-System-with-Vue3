@@ -12,14 +12,7 @@ const { notify } = useNotification();
 const shippingAddress = ref('');
 const submitting = ref(false);
 
-const formattedTotal = computed(() =>
-    new Intl.NumberFormat('en-IN', {
-        style: 'currency',
-        currency: 'INR',
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 2,
-    }).format(Number(cartStore.totalAmount))
-);
+const formattedSubtotal = computed(() => formatPrice(cartStore.totalAmount));
 
 function formatPrice(value) {
     return new Intl.NumberFormat('en-IN', {
@@ -29,6 +22,7 @@ function formatPrice(value) {
         maximumFractionDigits: 2,
     }).format(Number(value));
 }
+
 
 async function submitCheckout() {
     const address = shippingAddress.value.trim();
@@ -181,7 +175,12 @@ async function submitCheckout() {
                 <div class="summary-calculations">
                     <div class="summary-row">
                         <span>Subtotal</span>
-                        <span>{{ formattedTotal }}</span>
+                        <span>{{ formattedSubtotal }}</span>
+                    </div>
+
+                    <div class="summary-row">
+                        <span>Discount</span>
+                        <span class="discount-value">Applied after order creation</span>
                     </div>
 
                     <div class="summary-row">
@@ -192,14 +191,17 @@ async function submitCheckout() {
                     <div class="summary-divider"></div>
 
                     <div class="summary-total">
-                        <span>Order Total</span>
-                        <strong>{{ formattedTotal }}</strong>
+                        <span>Subtotal before discount</span>
+                        <strong>{{ formattedSubtotal }}</strong>
                     </div>
                 </div>
 
                 <div class="summary-payment-note">
                     <span aria-hidden="true">✓</span>
-                    <span>Mock payment will be completed after order creation.</span>
+                    <span>
+                        The best eligible offer will be applied automatically when you place your order.
+                        Your final payable amount will appear on the confirmation page.
+                    </span>
                 </div>
             </aside>
         </section>
@@ -532,6 +534,12 @@ async function submitCheckout() {
     color: var(--text-primary, #1d273b);
     font-weight: 650;
     text-align: right;
+}
+
+.discount-value {
+    color: var(--success, #198754);
+    font-size: 0.85rem;
+    font-weight: 600;
 }
 
 .shipping-value {
